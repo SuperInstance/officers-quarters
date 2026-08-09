@@ -102,14 +102,14 @@ export class FishIDSimulation {
     // Determine higher-order work (what the agent does when identification is reflexive)
     const higherOrderWork = this.getHigherOrderWork(day, reflexCount, daySightings.length);
 
-    // Add milestones
+    // Add milestones (each only fires once)
     if (day === 1) {
       events.push('Agent bootstrapped. Every sighting requires full cortex analysis.');
     }
-    if (this.agent.tiles.length >= 5 && !this.dayLogs.some(d => d.events.includes('Common species covered.'))) {
+    if (this.agent.tiles.length >= 5 && !this.dayLogs.some(d => d.events.some(e => e.includes('Common species')))) {
       events.push('Common species covered. Majority of sightings now reflexive.');
     }
-    if (this.agent.tiles.length >= 10 && !this.dayLogs.some(d => d.events.includes('Halfway to full coverage.'))) {
+    if (this.agent.tiles.length >= 10 && !this.dayLogs.some(d => d.events.some(e => e.includes('Halfway to full')))) {
       events.push('Halfway to full coverage. Attention beginning to free up.');
     }
     if (day >= 7 && this.agent.tiles.length >= 11) {

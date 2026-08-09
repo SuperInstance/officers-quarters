@@ -76,12 +76,12 @@ export class IDAgent {
       this.totalCortexAttempts++;
       surprise = 1.0 - Math.min(0.3, this.totalCortexAttempts * 0.005);
 
-      // Cortex accuracy: improves slowly with experience
-      const baseAccuracy = IDAgent.CORTEX_BASE_ACCURACY +
-        Math.min(0.25, this.totalCortexAttempts * IDAgent.CORTEX_LEARNING_RATE);
+      // Cortex accuracy: improves with experience, modulated by difficulty
+      const experienceBonus = Math.min(0.3, this.totalCortexAttempts * 0.008);
+      const baseAccuracy = IDAgent.CORTEX_BASE_ACCURACY + experienceBonus;
 
       // Difficulty penalty
-      const effectiveAccuracy = Math.max(0.2, baseAccuracy - sighting.difficulty * 0.3);
+      const effectiveAccuracy = Math.max(0.15, baseAccuracy - sighting.difficulty * 0.25);
       correct = Math.random() < effectiveAccuracy;
 
       // Cortex might guess wrong species — pick from similar-looking species
@@ -126,7 +126,7 @@ export class IDAgent {
 
     for (const tile of this.tiles) {
       const score = this.tileMatchScore(tile, sighting);
-      if (score > 0.65) {
+      if (score > 0.55) {
         candidates.push({ tile, score });
       }
     }
@@ -273,14 +273,14 @@ export class IDAgent {
     const minSize = Math.min(...sizes, species.sizeRange[0]);
     const maxSize = Math.max(...sizes, species.sizeRange[1]);
 
-    // Pad the deadband a bit to catch future variants
-    const padding = (species.sizeRange[1] - species.sizeRange[0]) * 0.1;
+    // Pad the deadband generously to catch juveniles and variants
+    const padding = (species.sizeRange[1] - species.sizeRange[0]) * 0.25;
 
     return {
       id: `tile-${String(++this.tileIdCounter).padStart(2, '0')}`,
       species: species.name,
       sizeDeadband: [
-        Math.max(1, Math.round((minSize - padding) * 10) / 10),
+        Math.max(1, Math.round((minSize - padding * 2) * 10) / 10),
         Math.round((maxSize + padding) * 10) / 10,
       ],
       colorRange: [species.baseColor],
