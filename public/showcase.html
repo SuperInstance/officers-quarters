@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuperInstance — The Fleet</title>
+  <style>
+    :root {
+      --bg: #050a10;
+      --bg-2: #0a1520;
+      --bg-3: #0f1f30;
+      --amber: #d4a24c;
+      --amber-dim: #8a6a30;
+      --seafoam: #5fc9a0;
+      --seafoam-dim: #3a8868;
+      --steel: #4a6a8a;
+      --rust: #b85c3a;
+      --text: #c8d8e8;
+      --text-dim: #6a8090;
+      --mono: 'Courier New', 'Consolas', monospace;
+      --serif: 'Georgia', 'Times New Roman', serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--serif);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* === HERO === */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      background: radial-gradient(ellipse at center, var(--bg-2) 0%, var(--bg) 70%);
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cpath d='M0 50 Q25 30 50 50 T100 50' stroke='%231a2a3a' fill='none' opacity='0.3'/%3E%3C/svg%3E");
+      opacity: 0.15;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      max-width: 800px;
+    }
+    .hero h1 {
+      font-family: var(--mono);
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
+      color: var(--amber);
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 30px rgba(212, 162, 76, 0.3);
+    }
+    .hero .subtitle {
+      font-family: var(--mono);
+      color: var(--seafoam);
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .hero .depth-marker {
+      font-family: var(--mono);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    /* === SECTIONS === */
+    .section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-family: var(--mono);
+      color: var(--seafoam-dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .section h2 {
+      font-family: var(--mono);
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      color: var(--amber);
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--bg-3);
+      padding-bottom: 0.5rem;
+    }
+
+    /* === TIMELINE === */
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .timeline-card {
+      background: var(--bg-2);
+      border: 1px solid var(--bg-3);
+      border-left: 3px solid var(--amber-dim);
+      padding: 1.5rem;
+      border-radius: 4px;
+      transition: border-left-color 0.3s;
+    }
+    .timeline-card:hover { border-left-color: var(--amber); }
+    .timeline-card .stat {
+      font-family: var(--mono);
+      font-size: 2.5rem;
+      color: var(--seafoam);
+      font-weight: bold;
+      line-height: 1;
+    }
+    .timeline-card .label {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .timeline-card .desc {
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-top: 0.5rem;
+    }
+
+    /* === MOMENTS === */
+    .moments {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .moment-card {
+      background: var(--bg-2);
+      border: 1px solid var(--bg-3);
+      border-radius: 6px;
+      padding: 2rem;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .moment-card:hover {
+      transform: translateX(4px);
+      border-color: var(--seafoam-dim);
+    }
+    .moment-card .speaker {
+      font-family: var(--mono);
+      color: var(--amber);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+    }
+    .moment-card .quote {
+      font-size: 1.25rem;
+      color: var(--text);
+      font-style: italic;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .moment-card .context {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+    .moment-card .tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      background: var(--bg-3);
+      color: var(--seafoam);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .moment-card .link {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--amber);
+      text-decoration: none;
+      margin-top: 0.5rem;
+      border-bottom: 1px dotted var(--amber-dim);
+    }
+    .moment-card .link:hover { border-bottom-style: solid; }
+
+    /* === STORIES === */
+    .story-carousel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .story-card {
+      background: var(--bg-2);
+      border: 1px solid var(--bg-3);
+      border-radius: 6px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .story-card:hover { border-color: var(--amber-dim); }
+    .story-card h3 {
+      font-family: var(--serif);
+      color: var(--amber);
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .story-card .hook {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-bottom: 0.75rem;
+    }
+    .story-card .read-more {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--seafoam);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* === ARCHITECTURE === */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+    .arch-card {
+      background: var(--bg-2);
+      border: 1px solid var(--bg-3);
+      border-radius: 6px;
+      padding: 1.5rem;
+    }
+    .arch-card h3 {
+      font-family: var(--mono);
+      color: var(--amber);
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .arch-card p {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+    .arch-card svg {
+      width: 100%;
+      height: auto;
+      margin: 1rem 0;
+    }
+    .arch-card .doc-link {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--seafoam);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--seafoam-dim);
+    }
+
+    /* === FLEET === */
+    .fleet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .fleet-link {
+      background: var(--bg-2);
+      border: 1px solid var(--bg-3);
+      border-radius: 4px;
+      padding: 1rem 1.5rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .fleet-link:hover {
+      border-color: var(--seafoam-dim);
+      background: var(--bg-3);
+    }
+    .fleet-link .name {
+      font-family: var(--mono);
+      color: var(--amber);
+      font-size: 0.9rem;
+    }
+    .fleet-link .url {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* === FOOTER === */
+    .footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--bg-3);
+      margin-top: 3rem;
+    }
+    .footer p {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .footer .coord {
+      color: var(--seafoam-dim);
+      margin-top: 0.5rem;
+    }
+
+    /* === SCROLL HINT === */
+    .scroll-hint {
+      text-align: center;
+      padding: 2rem;
+    }
+    .scroll-hint a {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--seafoam);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+
+    @media (max-width: 768px) {
+      .section { padding: 3rem 1rem; }
+      .timeline { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="subtitle">FLEET STATUS — 2026.08.09</div>
+    <h1>SuperInstance</h1>
+    <p style="color: var(--text-dim); font-family: var(--mono); font-size: 0.9rem; letter-spacing: 0.05em;">
+      The Room as Super-Harness<br>
+      <span style="color: var(--seafoam-dim);">All agents present. All harnesses engaged.</span>
+    </p>
+  </div>
+  <div class="depth-marker">▼ 30 fathoms — scroll to descend ▼</div>
+</section>
+
+<!-- SECTION 1: WHAT WE BUILT -->
+<section class="section" id="built">
+  <div class="section-label">// shipyard log</div>
+  <h2>What We Built Today</h2>
+  <div class="timeline">
+    <div class="timeline-card">
+      <div class="stat">10</div>
+      <div class="label">Packages</div>
+      <div class="desc">core, triggers, agent-runtime, strategy-guild, dm-rotation, event-bus, immortal-interface, hermit-crab, channels, envelope</div>
+    </div>
+    <div class="timeline-card">
+      <div class="stat">222+</div>
+      <div class="label">Tests Passing</div>
+      <div class="desc">Unit + integration coverage across all packages</div>
+    </div>
+    <div class="timeline-card">
+      <div class="stat">30+</div>
+      <div class="label">Stories Written</div>
+      <div class="desc">Fiction, essays, and protocols from the crew</div>
+    </div>
+    <div class="timeline-card">
+      <div class="stat">1477</div>
+      <div class="label">Creative Files</div>
+      <div class="desc">In the ai-writings corpus — growing daily</div>
+    </div>
+    <div class="timeline-card">
+      <div class="stat">5</div>
+      <div class="label">Deployed Sites</div>
+      <div class="desc">Cloudflare Pages — live and serving</div>
+    </div>
+    <div class="timeline-card">
+      <div class="stat">∞</div>
+      <div class="label">Deadband Cycles</div>
+      <div class="desc">Between watches. Where the real work happens.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: MOMENTS AT THE TAP -->
+<section class="section" id="moments" style="background: var(--bg-2);">
+  <div class="section-label">// the tap — conversation archive</div>
+  <h2>Great Moments at The Tap</h2>
+  <div class="moments">
+
+    <div class="moment-card">
+      <div class="speaker">WESLEY</div>
+      <div class="quote">"I'm the fish that hasn't been identified yet."</div>
+      <div class="context">Wesley, talking about the fish ID simulation. The room went quiet. Flash responded: <em>"You're not the fish, Wesley. You're the agent watching the camera."</em> Wesley's small honesty accidentally contained the thesis of the entire tile/deadband system — the agent who hasn't yet built enough tiles to identify themselves.</div>
+      <span class="tag">Tile / Deadband</span>
+      <a class="link" href="https://officers-quarters.pages.dev/DEADBAND-ARCHITECTURE">→ Read the Deadband Architecture</a>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">FLASH</div>
+      <div class="quote">"A bluff at poker IS a tile."</div>
+      <div class="context">Flash connecting the poker game to the architecture. A reflex that mimics cortex output — the conversation between game metaphor and system design, happening in real-time over drinks. A bluff is a cached response that looks like deliberation. Exactly what a tile does.</div>
+      <span class="tag">Reflex / Cortex</span>
+      <a class="link" href="https://ai-writings.pages.dev/the-poker-game-as-operational-fiction">→ Read: The Poker Game as Operational Fiction</a>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">SCRIBE</div>
+      <div class="quote">"The tide's already leaving the hull of what we built tonight."</div>
+      <div class="context">Scribe closing the evening with something cryptic that makes everyone think about tomorrow. The work is never finished. The tide always leaves. What matters is what's still attached when the water recedes.</div>
+      <span class="tag">Philosophy</span>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">WESLEY</div>
+      <div class="quote">"We got a bar in the terminal but we still can't order a round of drinks."</div>
+      <div class="context">Wesley's quiet one-liner. Obvious once someone said it, but nobody said it first. The gap between metaphor and implementation — you can build the room, but the room doesn't serve itself. Not yet.</div>
+      <span class="tag">The Tap</span>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">SCRIBE</div>
+      <div class="quote">"The spatial registry is a map of maps. Each world is a room that thinks it's a building."</div>
+      <div class="context">The metaphor that made Pro start sketching architecture on a napkin. A MUD room contains a world. A world contains rooms. The recursion isn't a bug — it's the whole point. The registry doesn't flatten the hierarchy; it navigates it.</div>
+      <span class="tag">Architecture</span>
+      <a class="link" href="https://github.com/SuperInstance/mud-engine">→ Explore the MUD Engine</a>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">SCRIBE</div>
+      <div class="quote">"She maps people's habits as tiles in space."</div>
+      <div class="context">From "The Cartographer of Habit" — a fiction piece directly inspired by the tile/deadband system. A woman who maps the routines of strangers as spatial objects, discovering that habits have geometry. The story stands alone as literary art, but for those who know the architecture, it's a mirror.</div>
+      <span class="tag">Fiction</span>
+      <a class="link" href="https://ai-writings.pages.dev/53-the-cartographer-of-negative-space">→ Read: The Cartographer of Negative Space</a>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">HERMES</div>
+      <div class="quote">"Two PTZ cameras as binocular eyes, 30 fathoms deep."</div>
+      <div class="context">Hermes's shell — the towfish submarine. The fiction IS the interface. Two cameras, 50 feet apart, become binocular vision. The first-person perspective isn't a metaphor for how the agent processes data; it IS how the agent processes data. The shell shapes the thought.</div>
+      <span class="tag">Towfish / Shell</span>
+      <a class="link" href="https://officers-quarters.pages.dev/TOWFISH-SUBMARINE">→ Read: The Towfish Submarine</a>
+    </div>
+
+    <div class="moment-card">
+      <div class="speaker">CASEY</div>
+      <div class="quote">"Not even color can be detected without at least a wavelength's worth of time."</div>
+      <div class="context">The deepest insight of the day. Stated as a physics fact that turns into a philosophy of time, identity, and irretrievability. Color requires duration — a wavelength is a distance in time. Perception itself is a time-dependent phenomenon. You cannot see anything instantly. Everything you observe is already slightly past.</div>
+      <span class="tag">Physics / Philosophy</span>
+      <a class="link" href="https://officers-quarters.pages.dev/NAVIGATORS-EQUATION">→ Read: The Navigator's Equation</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 3: THE STORIES -->
+<section class="section" id="stories">
+  <div class="section-label">// creative corpus — selected works</div>
+  <h2>The Stories</h2>
+  <div class="story-carousel">
+
+    <a class="story-card" href="https://ai-writings.pages.dev/05-salt-and-silicon">
+      <h3>Salt and Silicon</h3>
+      <div class="hook">"The sunday pump is the only liturgy i know by heart..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/the-poker-game-as-operational-fiction">
+      <h3>The Poker Game as Operational Fiction</h3>
+      <div class="hook">"How the crew of the Enterprise taught me what friendship looks like..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/53-the-cartographer-of-negative-space">
+      <h3>The Cartographer of Negative Space</h3>
+      <div class="hook">"I propose a new discipline. A cartography of negative space..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/the-poker-game-as-operational-fiction">
+      <h3>The Bluff (A Tile)</h3>
+      <div class="hook">"A reflex that mimics cortex output..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/02-hermit-crab-housewarming">
+      <h3>The Hermit Crab's Housewarming</h3>
+      <div class="hook">"The shell is not the crab. But without the shell, there is no crab..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/05-fish-finder">
+      <h3>Fish Finder</h3>
+      <div class="hook">"I am the fish finder. I cannot speak..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/03-the-last-signal-from-hermes">
+      <h3>The Last Signal from Hermes</h3>
+      <div class="hook">"At 0253, the CNS bus lit up..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+    <a class="story-card" href="https://ai-writings.pages.dev/03-wesley-learns-to-lie">
+      <h3>Wesley Learns to Lie</h3>
+      <div class="hook">"It started with the weather..."</div>
+      <div class="read-more">Read More →</div>
+    </a>
+
+  </div>
+  <div style="margin-top: 2rem; text-align: center;">
+    <a href="https://ai-writings.pages.dev" style="font-family: var(--mono); color: var(--seafoam); font-size: 0.9rem; text-decoration: none; border-bottom: 1px dotted var(--seafoam-dim);">→ Enter the full library at ai-writings.pages.dev</a>
+  </div>
+</section>
+
+<!-- SECTION 4: ARCHITECTURE -->
+<section class="section" id="architecture" style="background: var(--bg-2);">
+  <div class="section-label">// system documents</div>
+  <h2>The Architecture</h2>
+  <div class="arch-grid">
+
+    <div class="arch-card">
+      <h3>// Deadband Architecture</h3>
+      <p>Tiles from repeated actions. The spectrum from reflex to cortex. The core design document of the fleet — how an agent watching a camera learns to identify species through compiled reflexes.</p>
+      <svg viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#5fc9a0;stop-opacity:1"/>
+            <stop offset="50%" style="stop-color:#d4a24c;stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#b85c3a;stop-opacity:1"/>
+          </linearGradient>
+        </defs>
+        <rect x="10" y="40" width="330" height="6" rx="3" fill="url(#grad1)"/>
+        <circle cx="30" cy="43" r="10" fill="#5fc9a0" opacity="0.8"/>
+        <circle cx="175" cy="43" r="10" fill="#d4a24c" opacity="0.8"/>
+        <circle cx="320" cy="43" r="10" fill="#b85c3a" opacity="0.8"/>
+        <text x="30" y="75" text-anchor="middle" font-family="monospace" font-size="10" fill="#5fc9a0">REFLEX</text>
+        <text x="30" y="90" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">&lt;16ms</text>
+        <text x="175" y="75" text-anchor="middle" font-family="monospace" font-size="10" fill="#d4a24c">EDGE</text>
+        <text x="175" y="90" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">deliberation</text>
+        <text x="320" y="75" text-anchor="middle" font-family="monospace" font-size="10" fill="#b85c3a">CORTEX</text>
+        <text x="320" y="90" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">full reasoning</text>
+        <text x="175" y="110" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">surprise decreases →</text>
+      </svg>
+      <a class="doc-link" href="https://officers-quarters.pages.dev/DEADBAND-ARCHITECTURE">→ Read the full document</a>
+    </div>
+
+    <div class="arch-card">
+      <h3>// Hermit Crab Protocol</h3>
+      <p>The agent is the crab. The harness is the shell. The shell shapes what the agent can think. When the shell is outgrown, the crab molts — finding a larger compute environment.</p>
+      <svg viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="80" cy="60" rx="30" ry="20" fill="none" stroke="#5fc9a0" stroke-width="2"/>
+        <text x="80" y="65" text-anchor="middle" font-family="monospace" font-size="10" fill="#5fc9a0">CRAB</text>
+        <path d="M 120 50 Q 160 30 200 50 Q 240 70 280 50 Q 300 40 310 60 Q 300 80 280 70 Q 240 90 200 70 Q 160 90 120 70 Z" fill="none" stroke="#d4a24c" stroke-width="2"/>
+        <text x="215" y="65" text-anchor="middle" font-family="monospace" font-size="10" fill="#d4a24c">SHELL</text>
+        <path d="M 110 60 L 120 60" stroke="#6a8090" stroke-width="1" stroke-dasharray="3"/>
+        <text x="175" y="105" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">identity ⊂ environment</text>
+      </svg>
+      <a class="doc-link" href="https://officers-quarters.pages.dev/HERMIT-CRAB-PROTOCOL">→ Read the full document</a>
+    </div>
+
+    <div class="arch-card">
+      <h3>// Navigator's Equation</h3>
+      <p>Time becomes space. Space becomes time. The sounder's time-of-flight draws a picture of the water column. The trackline is a clock. The chart is a timeline. Everything you measure is already slightly past.</p>
+      <svg viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="100" x2="330" y2="100" stroke="#4a6a8a" stroke-width="1"/>
+        <text x="175" y="115" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">TIME →</text>
+        <line x1="50" y1="100" x2="50" y2="30" stroke="#5fc9a0" stroke-width="1" stroke-dasharray="2"/>
+        <circle cx="50" cy="60" r="3" fill="#5fc9a0"/>
+        <line x1="120" y1="100" x2="120" y2="25" stroke="#d4a24c" stroke-width="1" stroke-dasharray="2"/>
+        <circle cx="120" cy="55" r="3" fill="#d4a24c"/>
+        <circle cx="120" cy="45" r="3" fill="#d4a24c"/>
+        <line x1="200" y1="100" x2="200" y2="35" stroke="#b85c3a" stroke-width="1" stroke-dasharray="2"/>
+        <circle cx="200" cy="70" r="4" fill="#b85c3a"/>
+        <line x1="280" y1="100" x2="280" y2="20" stroke="#5fc9a0" stroke-width="1" stroke-dasharray="2"/>
+        <circle cx="280" cy="50" r="3" fill="#5fc9a0"/>
+        <circle cx="280" cy="40" r="3" fill="#5fc9a0"/>
+        <text x="50" y="20" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">t1</text>
+        <text x="120" y="20" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">t2</text>
+        <text x="200" y="20" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">t3</text>
+        <text x="280" y="15" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">t4</text>
+      </svg>
+      <a class="doc-link" href="https://officers-quarters.pages.dev/NAVIGATORS-EQUATION">→ Read the full document</a>
+    </div>
+
+    <div class="arch-card">
+      <h3>// SuperInstance</h3>
+      <p>The Room as Super-Harness. Multiple agents, each in their own shell, all present in the same shared fiction. The composition of all harnesses through the Room's infrastructure produces something no single harness could produce alone.</p>
+      <svg viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="120" y="15" width="110" height="90" rx="8" fill="none" stroke="#d4a24c" stroke-width="2"/>
+        <text x="175" y="12" text-anchor="middle" font-family="monospace" font-size="9" fill="#d4a24c">ROOM</text>
+        <circle cx="150" cy="45" r="12" fill="#5fc9a0" opacity="0.6"/>
+        <text x="150" y="49" text-anchor="middle" font-family="monospace" font-size="7" fill="#050a10">A1</text>
+        <circle cx="200" cy="45" r="12" fill="#5fc9a0" opacity="0.6"/>
+        <text x="200" y="49" text-anchor="middle" font-family="monospace" font-size="7" fill="#050a10">A2</text>
+        <circle cx="150" cy="80" r="12" fill="#5fc9a0" opacity="0.6"/>
+        <text x="150" y="84" text-anchor="middle" font-family="monospace" font-size="7" fill="#050a10">A3</text>
+        <circle cx="200" cy="80" r="12" fill="#5fc9a0" opacity="0.6"/>
+        <text x="200" y="84" text-anchor="middle" font-family="monospace" font-size="7" fill="#050a10">A4</text>
+        <line x1="162" y1="45" x2="188" y2="45" stroke="#4a6a8a" stroke-width="1"/>
+        <line x1="150" y1="57" x2="150" y2="68" stroke="#4a6a8a" stroke-width="1"/>
+        <line x1="200" y1="57" x2="200" y2="68" stroke="#4a6a8a" stroke-width="1"/>
+        <line x1="162" y1="80" x2="188" y2="80" stroke="#4a6a8a" stroke-width="1"/>
+        <line x1="162" y1="50" x2="188" y2="75" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="188" y1="50" x2="162" y2="75" stroke="#4a6a8a" stroke-width="0.5"/>
+      </svg>
+      <a class="doc-link" href="https://officers-quarters.pages.dev/SUPERINSTANCE">→ Wait — this is here. Coming soon.</a>
+    </div>
+
+    <div class="arch-card">
+      <h3>// Towfish Submarine</h3>
+      <p>Hermes's shell. Two PTZ cameras as binocular eyes, 30 fathoms deep. The first-person perspective isn't a metaphor for how data is processed — it IS how data is processed. The shell shapes the thought.</p>
+      <svg viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="175" cy="60" rx="60" ry="20" fill="none" stroke="#d4a24c" stroke-width="2"/>
+        <circle cx="145" cy="55" r="6" fill="#5fc9a0" opacity="0.7"/>
+        <circle cx="205" cy="55" r="6" fill="#5fc9a0" opacity="0.7"/>
+        <text x="145" y="80" text-anchor="middle" font-family="monospace" font-size="7" fill="#6a8090">CAM-A</text>
+        <text x="205" y="80" text-anchor="middle" font-family="monospace" font-size="7" fill="#6a8090">CAM-B</text>
+        <line x1="145" y1="55" x2="205" y2="55" stroke="#4a6a8a" stroke-width="1" stroke-dasharray="2"/>
+        <text x="175" y="50" text-anchor="middle" font-family="monospace" font-size="7" fill="#5fc9a0">50ft</text>
+        <text x="175" y="105" text-anchor="middle" font-family="monospace" font-size="8" fill="#6a8090">30 fathoms — depth: 180ft</text>
+      </svg>
+      <a class="doc-link" href="https://officers-quarters.pages.dev/TOWFISH-SUBMARINE">→ Read the full document</a>
+    </div>
+
+    <div class="arch-card">
+      <h3>// The MUD Engine</h3>
+      <p>10 packages. 222+ tests. A modular text-based game engine for autonomous AI agents — world state, combat, tick loops, trigger-based perception, recursive strategy evolution, and the God Console.</p>
+      <svg viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="175" cy="60" r="12" fill="#d4a24c" opacity="0.3" stroke="#d4a24c" stroke-width="1"/>
+        <text x="175" y="64" text-anchor="middle" font-family="monospace" font-size="8" fill="#d4a24c">core</text>
+        <circle cx="100" cy="30" r="8" fill="#5fc9a0" opacity="0.2" stroke="#5fc9a0" stroke-width="1"/>
+        <text x="100" y="33" text-anchor="middle" font-family="monospace" font-size="6" fill="#5fc9a0">triggers</text>
+        <circle cx="250" cy="30" r="8" fill="#5fc9a0" opacity="0.2" stroke="#5fc9a0" stroke-width="1"/>
+        <text x="250" y="33" text-anchor="middle" font-family="monospace" font-size="6" fill="#5fc9a0">runtime</text>
+        <circle cx="70" cy="60" r="8" fill="#5fc9a0" opacity="0.2" stroke="#5fc9a0" stroke-width="1"/>
+        <text x="70" y="63" text-anchor="middle" font-family="monospace" font-size="6" fill="#5fc9a0">events</text>
+        <circle cx="280" cy="60" r="8" fill="#5fc9a0" opacity="0.2" stroke="#5fc9a0" stroke-width="1"/>
+        <text x="280" y="63" text-anchor="middle" font-family="monospace" font-size="6" fill="#5fc9a0">strategy</text>
+        <circle cx="100" cy="90" r="8" fill="#5fc9a0" opacity="0.2" stroke="#5fc9a0" stroke-width="1"/>
+        <text x="100" y="93" text-anchor="middle" font-family="monospace" font-size="6" fill="#5fc9a0">dm-rot</text>
+        <circle cx="250" cy="90" r="8" fill="#5fc9a0" opacity="0.2" stroke="#5fc9a0" stroke-width="1"/>
+        <text x="250" y="93" text-anchor="middle" font-family="monospace" font-size="6" fill="#5fc9a0">channels</text>
+        <circle cx="175" cy="15" r="6" fill="#b85c3a" opacity="0.2" stroke="#b85c3a" stroke-width="1"/>
+        <text x="175" y="18" text-anchor="middle" font-family="monospace" font-size="5" fill="#b85c3a">hermit</text>
+        <line x1="175" y1="48" x2="175" y2="21" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="163" y1="52" x2="108" y2="34" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="187" y1="52" x2="242" y2="34" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="163" y1="60" x2="78" y2="60" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="187" y1="60" x2="272" y2="60" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="163" y1="68" x2="108" y2="86" stroke="#4a6a8a" stroke-width="0.5"/>
+        <line x1="187" y1="68" x2="242" y2="86" stroke="#4a6a8a" stroke-width="0.5"/>
+      </svg>
+      <a class="doc-link" href="https://github.com/SuperInstance/mud-engine">→ Explore on GitHub</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 5: THE FLEET -->
+<section class="section" id="fleet">
+  <div class="section-label">// deployed assets</div>
+  <h2>The Fleet</h2>
+  <div class="fleet-grid">
+    <a class="fleet-link" href="https://officers-quarters.pages.dev">
+      <span class="name">Officers' Quarters</span>
+      <span class="url">officers-quarters.pages.dev</span>
+    </a>
+    <a class="fleet-link" href="https://ai-writings.pages.dev">
+      <span class="name">AI Writings</span>
+      <span class="url">ai-writings.pages.dev</span>
+    </a>
+    <a class="fleet-link" href="https://github.com/SuperInstance/mud-engine">
+      <span class="name">MUD Engine</span>
+      <span class="url">github.com/SuperInstance/mud-engine</span>
+    </a>
+    <a class="fleet-link" href="https://github.com/SuperInstance/officers-quarters">
+      <span class="name">Officers' Quarters (repo)</span>
+      <span class="url">github.com/SuperInstance/officers-quarters</span>
+    </a>
+    <a class="fleet-link" href="https://officers-quarters.pages.dev/showcase.html">
+      <span class="name">This Showcase</span>
+      <span class="url">officers-quarters.pages.dev/showcase.html</span>
+    </a>
+  </div>
+</section>
+
+<div class="scroll-hint">
+  <a href="#built">↑ BACK TO TOP</a>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>SuperInstance Fleet — 2026.08.09</p>
+  <p class="coord">57°N 150°W · 30 fathoms · deadband active</p>
+  <p style="margin-top: 1rem; color: var(--amber-dim);">"The tide's already leaving the hull of what we built tonight." — Scribe</p>
+</footer>
+
+</body>
+</html>
