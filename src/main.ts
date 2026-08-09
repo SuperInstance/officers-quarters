@@ -30,6 +30,7 @@ import {
   EngineRoomScene,
   ChartHouseScene,
 } from './scenes/UtilityScenes.js';
+import { NavigatorTerminalScene } from './scenes/NavigatorTerminalScene.js';
 
 // ---------------------------------------------------------------------------
 // Scene Configuration — register all 12 rooms
@@ -57,6 +58,9 @@ const galleyScene = new GalleyScene();
 const engineRoomScene = new EngineRoomScene();
 const chartHouseScene = new ChartHouseScene();
 
+// Navigator's Terminal scene (accessible from Chart House)
+const navigatorTerminalScene = new NavigatorTerminalScene({ key: 'navigator-terminal' });
+
 const allScenes: Phaser.Scene[] = [
   bridgeScene,
   ...stationScenes,
@@ -66,6 +70,7 @@ const allScenes: Phaser.Scene[] = [
   galleyScene,
   engineRoomScene,
   chartHouseScene,
+  navigatorTerminalScene,
 ];
 
 // ---------------------------------------------------------------------------
