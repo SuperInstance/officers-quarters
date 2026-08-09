@@ -52,8 +52,8 @@ export class IDAgent {
       tileId = tileMatch.id;
 
       // Accuracy: tiles are very accurate but edge cases can still misfire
-      const edgePenalty = sighting.difficulty > 0.6 ? 0.1 : 0.02;
-      const juvenilePenalty = sighting.isJuvenile ? 0.05 : 0;
+      const edgePenalty = sighting.difficulty > 0.6 ? 0.05 : 0.01;
+      const juvenilePenalty = sighting.isJuvenile ? 0.03 : 0;
       correct = Math.random() > (edgePenalty + juvenilePenalty);
       surprise = sighting.difficulty > 0.6 ? 0.15 : 0.02;
       processingTime = 15 + Math.random() * 10; // 15-25ms (instant)
@@ -94,8 +94,11 @@ export class IDAgent {
       processingTime = 800 + Math.random() * 1200; // 800-2000ms (slow)
       notes = 'Cortex analysis required. No matching tile.';
 
-      // Track encounter for potential tile formation
-      this.trackEncounter(sighting, day);
+      // Track encounter for potential tile formation (only if cortex got it right —
+      // the agent needs to have successfully identified the fish to form a pattern)
+      if (correct) {
+        this.trackEncounter(sighting, day);
+      }
     }
 
     return {
@@ -114,13 +117,16 @@ export class IDAgent {
 
   /**
    * Check all tiles for a deadband match.
+   * A tile only matches if the sighting's species matches the tile's species
+   * (in reality, the agent doesn't know the species — it matches on visual
+   * features. We simulate this by checking if the visual features align.)
    */
   private checkTiles(sighting: FishSighting): IDTile | null {
     const candidates: { tile: IDTile; score: number }[] = [];
 
     for (const tile of this.tiles) {
       const score = this.tileMatchScore(tile, sighting);
-      if (score > 0.7) {
+      if (score > 0.65) {
         candidates.push({ tile, score });
       }
     }
@@ -129,21 +135,57 @@ export class IDAgent {
 
     // Return the best-matching tile
     candidates.sort((a, b) => b.score - a.score);
-
-    // If multiple tiles match with similar scores, it's an edge case
-    // (the agent has to disambiguate)
     return candidates[0].tile;
   }
 
   /**
    * Score how well a sighting matches a tile's deadband.
+   * The key insight: a tile encodes visual features (size, shape, color).
+   * It matches when the sighting LOOKS like the species the tile was built for.
+   * We simulate this by checking the sighting's features against the tile's
+   * deadband — but the actual species identity is hidden from the agent.
+   *
+   * In this simulation, since sightings carry the species' base features,
+   * a tile will only score high when the sighting belongs to the same species.
+   * Cross-species confusion happens when features overlap (similar size + shape).
    */
   private tileMatchScore(tile: IDTile, sighting: FishSighting): number {
+    // First gate: the sighting's species must match the tile's species
+    // (In reality, this is determined by visual feature overlap —
+    //  we shortcut by checking the actual species, since the sighting's
+    //  features ARE derived from its species.)
+    if (sighting.species !== tile.species) {
+      // Check if this species could be confused with the tile's species
+      const tileSpecies = getSpecies(tile.species);
+      const sightingSpecies = getSpecies(sighting.species);
+      if (!tileSpecies || !sightingSpecies) return 0;
+
+      // Only confusable if same category AND similar body shape
+      if (tileSpecies.category !== sightingSpecies.category) return 0;
+      if (tileSpecies.bodyShape !== sightingSpecies.bodyShape) return 0;
+
+      // Even then, low score — only matches if size overlaps heavily
+      const sizeOverlap = Math.min(tile.sizeDeadband[1], sighting.size) -
+                          Math.max(tile.sizeDeadband[0], sighting.size);
+      if (sizeOverlap <= 0) return 0;
+
+      // Confusable species get a modest score — enough for edge cases
+      let score = 0.2;
+      if (sighting.visibility === 'murky' || sighting.visibility === 'partial-view') {
+        score += 0.1;
+      }
+      if (sighting.isJuvenile) {
+        score += 0.05;
+      }
+      return score; // not enough to trigger reflex
+    }
+
+    // Same species — now check if the sighting falls within the tile's deadband
     let score = 0;
 
     // Size check (within deadband)
     if (sighting.size >= tile.sizeDeadband[0] && sighting.size <= tile.sizeDeadband[1]) {
-      score += 0.35;
+      score += 0.4;
     } else {
       // Partial credit if close to deadband edge
       const [min, max] = tile.sizeDeadband;
@@ -151,32 +193,27 @@ export class IDAgent {
       const distFromEdge = sighting.size < min
         ? (min - sighting.size) / range
         : (sighting.size - max) / range;
-      if (distFromEdge < 0.2) score += 0.15; // close to edge
+      if (distFromEdge < 0.2) score += 0.2; // close to edge — still mostly matches
+      else return 0; // way outside deadband — tile doesn't fire
     }
 
     // Body shape check
     if (tile.bodyShapes.includes(sighting.bodyShape)) {
-      score += 0.3;
+      score += 0.35;
     }
 
-    // Color check (simplified — in real system would be perceptual distance)
+    // Color check
     if (tile.colorRange.includes(sighting.color)) {
-      score += 0.2;
+      score += 0.25;
     }
 
-    // Behavior bonus (schooling fish likely that species)
-    if (sighting.behavior === 'schooling' && tile.species.includes('herring')) {
-      score += 0.15;
-    }
-
-    // Visibility penalty
+    // Penalties for difficult conditions
     if (sighting.visibility === 'murky' || sighting.visibility === 'partial-view') {
-      score -= 0.1;
+      score -= 0.08;
     }
 
-    // Juvenile penalty — they don't match adult tiles as well
     if (sighting.isJuvenile) {
-      score -= 0.1;
+      score -= 0.05;
     }
 
     return Math.max(0, score);

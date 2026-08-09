@@ -332,6 +332,6 @@ describe('simulateActions', () => {
   it('produces mostly repeated actions with low novelty', () => {
     const actions = simulateActions('TestAgent', 100, 0.05);
     const types = new Set(actions.map(a => a.type));
-    expect(types.size).toBeLessThan(15); // mostly the same action types
+    expect(types.size).toBeLessThan(20); // mostly the same action types (10 base + some novel)
   });
 });

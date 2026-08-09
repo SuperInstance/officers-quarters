@@ -142,7 +142,8 @@ export class FishIDSimulation {
     const reflexRatio = totalCount > 0 ? reflexCount / totalCount : 0;
     const work: string[] = [];
 
-    if (reflexRatio < 0.5 || day < 4) return work;
+    // Only start higher-order work after day 5 AND when majority reflexive
+    if (day < 6 || reflexRatio < 0.4) return work;
 
     // As reflex ratio increases, agent has more attention for higher-order work
     if (reflexRatio >= 0.5) {
