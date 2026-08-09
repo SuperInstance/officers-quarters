@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fish ID Simulation — The Deadband Learning Curve</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e1a;
+    color: #c8d6e5;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 1.4rem;
+    color: #54a0ff;
+    margin-bottom: 0.3rem;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    color: #576574;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  .chart-container {
+    position: relative;
+    background: #111827;
+    border: 1px solid #1e2a3a;
+    border-radius: 8px;
+    padding: 2rem 1.5rem 1rem 4rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  canvas {
+    display: block;
+  }
+  .legend {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .legend-swatch {
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .annotations {
+    margin-top: 2rem;
+    max-width: 800px;
+    width: 100%;
+  }
+  .annotations h2 {
+    color: #54a0ff;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.5px;
+  }
+  .ann {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  .ann-day {
+    color: #feca57;
+    flex-shrink: 0;
+    width: 60px;
+  }
+  .ann-text { color: #8899aa; }
+  .stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat {
+    text-align: center;
+    padding: 0.8rem 1.5rem;
+    background: #111827;
+    border: 1px solid #1e2a3a;
+    border-radius: 6px;
+  }
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: block;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: #576574;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Fish Identification Simulation</h1>
+<p class="subtitle">The Deadband Architecture — 30-Day Learning Curve Over Alaska Waters</p>
+
+<div class="chart-container">
+  <canvas id="chart" width="760" height="400"></canvas>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span> Surprise (falling)</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#54a0ff"></span> Accuracy (rising)</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#26de81"></span> Tile Coverage (rising)</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#feca57;opacity:0.6"></span> Reflex Ratio</div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="annotations">
+  <h2>Key Moments in the Learning Curve</h2>
+  <div class="ann"><span class="ann-day">Day 1</span><span class="ann-text">Every sighting requires cortex analysis. 0 tiles. Agent guesses species — ~40% accuracy. Surprise = 1.0.</span></div>
+  <div class="ann"><span class="ann-day">Day 3-5</span><span class="ann-text">First tiles form for chinook, coho, halibut (3-encounter rule triggered). Common species become reflexive. Surprise drops sharply.</span></div>
+  <div class="ann"><span class="ann-day">Day 7</span><span class="ann-text">10+ tiles active. Agent's attention begins to free up — notices migration timing patterns instead of just identifying species.</span></div>
+  <div class="ann"><span class="ann-day">Day 10-12</span><span class="ann-text">Edge cases resolved: juvenile salmon, murky water sightings. Tile deadbands expand to absorb variation.</span></div>
+  <div class="ann"><span class="ann-day">Day 14</span><span class="ann-text">All 15 species covered. Cortex disengages from identification. Agent shifts to bycatch prediction and temperature correlation.</span></div>
+  <div class="ann"><span class="ann-day">Day 30</span><span class="ann-text">98% accuracy, 0.02 surprise. Identification is fully reflexive. Agent studies ecosystem health and stock dynamics.</span></div>
+</div>
+
+<script>
+// ─── Simulation data (inline for standalone rendering) ───────────────────────
+
+const days = Array.from({length: 30}, (_, i) => i + 1);
+
+// Simulated curves matching the learning model
+function surpriseCurve(day) {
+  // Sharp initial drop, then asymptotic to ~0.02
+  return Math.max(0.02, 1.0 * Math.exp(-day / 4.5));
+}
+
+function accuracyCurve(day) {
+  // S-curve: starts ~40%, rises to ~98%
+  return 40 + 58 / (1 + Math.exp(-(day - 5) / 2.5));
+}
+
+function tileCountCurve(day) {
+  // Tiles form in bursts, plateau at 15
+  const formations = [
+    {day: 2, count: 2}, {day: 3, count: 4}, {day: 4, count: 6},
+    {day: 5, count: 8}, {day: 6, count: 10}, {day: 7, count: 11},
+    {day: 9, count: 12}, {day: 11, count: 13}, {day: 13, count: 14},
+    {day: 16, count: 15}
+  ];
+  let total = 0;
+  for (const f of formations) {
+    if (day >= f.day) total = f.count;
+  }
+  return total;
+}
+
+function coverageCurve(day) {
+  return Math.min(1.0, tileCountCurve(day) / 15);
+}
+
+function reflexRatioCurve(day) {
+  // Proportion of sightings handled by reflex (not cortex)
+  return Math.min(0.98, 1.0 - Math.exp(-day / 3.5));
+}
+
+// ─── Canvas Drawing ──────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+
+// Margins
+const ML = 50, MR = 30, MT = 20, MB = 40;
+const plotW = W - ML - MR;
+const plotH = H - MT - MB;
+
+function xFor(day) { return ML + ((day - 1) / 29) * plotW; }
+function yFor(val) { return MT + (1 - val) * plotH; }
+
+// Grid
+ctx.strokeStyle = '#1a2332';
+ctx.lineWidth = 1;
+ctx.font = '10px monospace';
+ctx.fillStyle = '#4a5568';
+
+// Horizontal grid lines (0, 0.25, 0.5, 0.75, 1.0)
+for (let v = 0; v <= 1.0; v += 0.25) {
+  const y = yFor(v);
+  ctx.beginPath();
+  ctx.moveTo(ML, y);
+  ctx.lineTo(W - MR, y);
+  ctx.stroke();
+  ctx.fillText((v * 100).toFixed(0) + '%', 10, y + 3);
+}
+
+// Vertical grid lines (every 5 days)
+for (let d = 1; d <= 30; d += 5) {
+  const x = xFor(d);
+  ctx.beginPath();
+  ctx.moveTo(x, MT);
+  ctx.lineTo(x, H - MB);
+  ctx.stroke();
+  ctx.fillText('Day ' + d, x - 15, H - MB + 15);
+}
+
+// Axis labels
+ctx.fillStyle = '#576574';
+ctx.font = '11px monospace';
+ctx.fillText('SURPRISE / ACCURACY / COVERAGE', 10, 12);
+
+// ─── Draw Curves ─────────────────────────────────────────────────────────────
+
+function drawCurve(fn, color, fill = false, fillColor = null) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let d = 1; d <= 30; d++) {
+    const x = xFor(d);
+    const y = yFor(fn(d));
+    if (d === 1) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  if (fill) {
+    ctx.lineTo(xFor(30), yFor(0));
+    ctx.lineTo(xFor(1), yFor(0));
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+  }
+}
+
+// Reflex ratio (background fill — the "freed attention" area)
+ctx.globalAlpha = 0.12;
+drawCurve(reflexRatioCurve, '#feca57', true, '#feca57');
+ctx.globalAlpha = 1.0;
+
+// Surprise (falling)
+drawCurve(surpriseCurve, '#ff6b6b');
+
+// Accuracy (rising)
+drawCurve(accuracyCurve, '#54a0ff');
+
+// Coverage (rising)
+drawCurve(coverageCurve, '#26de81');
+
+// ─── Annotations ─────────────────────────────────────────────────────────────
+
+function drawAnnotation(day, text, color) {
+  const x = xFor(day);
+  const y = yFor(surpriseCurve(day));
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, MT + 10);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dot
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Label
+  ctx.fillStyle = color;
+  ctx.font = 'bold 9px monospace';
+  const labelY = MT + 8;
+  const labelX = Math.min(x, W - MR - 80);
+  ctx.fillText(text, labelX - 30, labelY);
+}
+
+drawAnnotation(2, 'FIRST TILE', '#feca57');
+drawAnnotation(7, 'ATTENTION FREED', '#26de81');
+drawAnnotation(12, 'EDGE CASES RESOLVED', '#ff6b6b');
+drawAnnotation(16, 'FULL COVERAGE', '#54a0ff');
+
+// ─── Stats ───────────────────────────────────────────────────────────────────
+
+const statsEl = document.getElementById('stats');
+const stats = [
+  {value: '15', label: 'Tiles Formed', color: '#26de81'},
+  {value: '200', label: 'Sightings', color: '#54a0ff'},
+  {value: '98%', label: 'Final Accuracy', color: '#26de81'},
+  {value: '0.02', label: 'Final Surprise', color: '#ff6b6b'},
+  {value: '100%', label: 'Reflex Rate', color: '#feca57'},
+];
+
+for (const s of stats) {
+  const el = document.createElement('div');
+  el.className = 'stat';
+  el.innerHTML = `<span class="stat-value" style="color:${s.color}">${s.value}</span><span class="stat-label">${s.label}</span>`;
+  statsEl.appendChild(el);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Officers' Quarters</title>
+  <meta name="description" content="12-room standalone system with intelligent terminals, tile evolution, and reflex-to-cortex learning." />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #050a10;
+      color: #c0c0c0;
+      overflow: hidden;
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #game-container {
+      flex: 1;
+      position: relative;
+      min-width: 0;
+    }
+
+    #game-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: #0a0f18;
+      border-left: 1px solid #1a2030;
+      overflow-y: auto;
+      font-family: 'Georgia', serif;
+    }
+
+    #sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #1a2030;
+      background: linear-gradient(135deg, #0a1628 0%, #0d1a2e 100%);
+    }
+
+    #sidebar-header h1 {
+      font-size: 16px;
+      color: #4fc3f7;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+
+    #sidebar-header p {
+      font-size: 10px;
+      color: #555;
+      font-style: italic;
+    }
+
+    #sidebar-content {
+      padding: 16px 20px;
+    }
+
+    .sidebar-room {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      background: #0d1420;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      border: 1px solid #1a2535;
+    }
+
+    .room-icon {
+      font-size: 28px;
+    }
+
+    .room-name {
+      font-size: 14px;
+      color: #ddd;
+      font-weight: bold;
+    }
+
+    .room-cat {
+      font-size: 9px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 11px;
+      color: #4fc3f7;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .agent-stat {
+      padding: 8px 0;
+      border-bottom: 1px solid #0d1420;
+    }
+
+    .agent-name {
+      font-size: 12px;
+      color: #ccc;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .stat-label {
+      color: #555;
+    }
+
+    .stat-val {
+      color: #aaa;
+    }
+
+    .sidebar-insight {
+      padding: 12px;
+      background: #0a0e15;
+      border-radius: 6px;
+      border: 1px solid #141a25;
+    }
+
+    .sidebar-insight h3 {
+      font-size: 11px;
+      color: #ffc107;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-insight p {
+      font-size: 10px;
+      color: #777;
+      line-height: 1.5;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      #sidebar {
+        width: 100%;
+        min-width: 0;
+        max-height: 30vh;
+        border-left: none;
+        border-top: 1px solid #1a2030;
+        order: 2;
+      }
+
+      #game-container {
+        flex: 1;
+        order: 1;
+      }
+    }
+
+    /* Loading */
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #4fc3f7;
+      font-family: 'Courier New', monospace;
+    }
+
+    #loading h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    #loading p {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <h2>◈ Officers' Quarters ◈</h2>
+    <p>Initializing terminals...</p>
+  </div>
+
+  <div id="game-container"></div>
+
+  <aside id="sidebar">
+    <div id="sidebar-header">
+      <h1>◈ OFFICERS' QUARTERS</h1>
+      <p>12-Room Intelligent Terminal System</p>
+    </div>
+    <div id="sidebar-content">
+      <div style="color: #555; font-size: 11px; padding: 20px 0;">
+        Loading fleet data...
+      </div>
+    </div>
+  </aside>
+
+  <script type="module" src="/src/main.ts"></script>
+
+  <script>
+    // Hide loading screen once Phaser starts
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const loading = document.getElementById('loading');
+        if (loading) loading.classList.add('hidden');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
