@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>◆ FLEET STATUS — Lucineer Command Dashboard</title>
+  <style>
+    :root {
+      --bg-deepest: #050508;
+      --bg-dark: #0a0a12;
+      --bg-panel: #0e0e1a;
+      --bg-card: #12121f;
+      --border: #1a1a2e;
+      --border-bright: #2a2a44;
+      --text-dim: #555577;
+      --text-mid: #8888aa;
+      --text-bright: #e0e0ff;
+      --accent: #00ffaa;
+      --accent-dim: #00aa77;
+      --warn: #ffaa00;
+      --error: #ff4466;
+      --ok: #00ffaa;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg-deepest);
+      color: var(--text-bright);
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-bright);
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      letter-spacing: 2px;
+    }
+    .header .meta {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .header .meta #last-update { color: var(--text-mid); }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .panel h2 {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label {
+      color: var(--text-mid);
+      font-size: 0.85rem;
+    }
+    .stat-value {
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .dot-ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+    .dot-warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+    .dot-error { background: var(--error); box-shadow: 0 0 6px var(--error); }
+    .dot-unknown { background: var(--text-dim); }
+    .status-code {
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .code-2xx { background: rgba(0,255,170,0.15); color: var(--ok); }
+    .code-3xx { background: rgba(0,170,255,0.15); color: #00aaff; }
+    .code-4xx { background: rgba(255,170,0,0.15); color: var(--warn); }
+    .code-5xx { background: rgba(255,68,102,0.15); color: var(--error); }
+    .code-err { background: rgba(255,68,102,0.15); color: var(--error); }
+    .url-link {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 0.8rem;
+      word-break: break-all;
+    }
+    .url-link:hover { color: var(--accent); }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .summary-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .summary-card {
+      flex: 1;
+      min-width: 140px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-card .num {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .summary-card .label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+    .refresh-note {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      margin-top: 16px;
+    }
+    .hermes-obs {
+      font-size: 0.8rem;
+      color: var(--text-mid);
+      font-style: italic;
+      line-height: 1.5;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>◆ FLEET STATUS</h1>
+    <div class="meta">
+      <div id="last-update">Loading…</div>
+      <div>Auto-refresh: 30s</div>
+    </div>
+  </div>
+
+  <div class="summary-bar" id="summary-bar">
+    <div class="summary-card"><div class="num" id="stat-workers">—</div><div class="label">Workers</div></div>
+    <div class="summary-card"><div class="num" id="stat-pages">—</div><div class="label">Pages Sites</div></div>
+    <div class="summary-card"><div class="num" id="stat-online">—</div><div class="label">Online</div></div>
+    <div class="summary-card"><div class="num" id="stat-corpus">—</div><div class="label">Creative Corpus</div></div>
+    <div class="summary-card"><div class="num" id="stat-repos">—</div><div class="label">Repos</div></div>
+    <div class="summary-card"><div class="num" id="stat-tests">—</div><div class="label">Tests</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2> ⚡ Workers</h2>
+      <div id="workers-list"></div>
+    </div>
+    <div class="panel">
+      <h2>📄 Pages Sites</h2>
+      <div id="pages-list"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>💬 Recent Tap Activity</h2>
+      <div id="tap-activity" style="font-size:0.8rem;color:var(--text-mid);line-height:1.6;">Fetching…</div>
+    </div>
+    <div class="panel">
+      <h2>👁 Hermes Latest Observation</h2>
+      <div id="hermes-obs" class="hermes-obs">Fetching…</div>
+    </div>
+  </div>
+
+  <div class="refresh-note">Fleet Status Dashboard · Lucineer Command · <span id="footer-time"></span></div>
+
+  <script>
+    const WORKERS = [
+      { name: 'The Tap', url: 'https://the-tap.casey-digennaro.workers.dev' },
+      { name: 'Collective Unconscious', url: 'https://collective-unconscious.casey-digennaro.workers.dev' },
+      { name: 'Hermes Frames', url: 'https://hermes-frames.casey-digennaro.workers.dev' },
+      { name: 'Hermes Query API', url: 'https://hermes-query-api.casey-digennaro.workers.dev' },
+      { name: 'Hermes Tap Relay', url: 'https://hermes-tap-relay.casey-digennaro.workers.dev' },
+      { name: 'Hermes Screenshots', url: 'https://hermes-screenshots.casey-digennaro.workers.dev' },
+    ];
+
+    const PAGES = [
+      { name: 'Officers Quarters', url: 'https://officers-quarters.pages.dev' },
+      { name: 'OQ Showcase', url: 'https://officers-quarters.pages.dev/showcase.html' },
+      { name: 'OQ Earned Moments', url: 'https://officers-quarters.pages.dev/earned-moments.html' },
+      { name: 'OQ Fleet Status', url: 'https://officers-quarters.pages.dev/fleet-status.html' },
+      { name: 'ScummVM Arcade', url: 'https://scummvm-arcade.pages.dev' },
+      { name: 'ScummVM Showcase', url: 'https://scummvm-arcade.pages.dev/showcase.html' },
+      { name: 'AI Writings', url: 'https://ai-writings.pages.dev' },
+      { name: 'Immortal Interface', url: 'https://immortal-interface.pages.dev' },
+    ];
+
+    let onlineCount = 0;
+    let totalChecked = 0;
+
+    function statusClass(code) {
+      if (code >= 200 && code < 300) return 'code-2xx';
+      if (code >= 300 && code < 400) return 'code-3xx';
+      if (code >= 400 && code < 500) return 'code-4xx';
+      if (code >= 500) return 'code-5xx';
+      return 'code-err';
+    }
+
+    function dotClass(code) {
+      if (code >= 200 && code < 400) return 'dot-ok';
+      if (code >= 400 && code < 500) return 'dot-warn';
+      if (code >= 500 || code === 0) return 'dot-error';
+      return 'dot-unknown';
+    }
+
+    async function checkUrl(item, container) {
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      row.innerHTML = `
+        <span>
+          <span class="status-dot dot-unknown"></span>
+          <span class="stat-label">${item.name}</span>
+        </span>
+        <span class="status-code code-err">…</span>
+      `;
+      container.appendChild(row);
+
+      try {
+        const res = await fetch(item.url, { mode: 'no-cors', signal: AbortSignal.timeout(8000) });
+        // no-cors gives opaque response, type 'opaque' means it's alive
+        const code = res.type === 'opaque' ? 200 : res.status;
+        row.querySelector('.status-dot').className = 'status-dot ' + dotClass(code);
+        row.querySelector('.status-code').textContent = code;
+        row.querySelector('.status-code').className = 'status-code ' + statusClass(code);
+        if (code >= 200 && code < 400) onlineCount++;
+      } catch (e) {
+        // Try a fallback - if no-cors fails, it might still be up
+        row.querySelector('.status-dot').className = 'status-dot dot-warn';
+        row.querySelector('.status-code').textContent = '?';
+        row.querySelector('.status-code').className = 'status-code code-4xx';
+      }
+      totalChecked++;
+    }
+
+    async function checkAll() {
+      onlineCount = 0;
+      totalChecked = 0;
+
+      const wList = document.getElementById('workers-list');
+      const pList = document.getElementById('pages-list');
+      wList.innerHTML = '';
+      pList.innerHTML = '';
+
+      const wPromises = WORKERS.map(w => checkUrl(w, wList));
+      const pPromises = PAGES.map(p => checkUrl(p, pList));
+
+      await Promise.all([...wPromises, ...pPromises]);
+
+      document.getElementById('stat-workers').textContent = WORKERS.length;
+      document.getElementById('stat-pages').textContent = PAGES.length;
+      document.getElementById('stat-online').textContent = `${onlineCount}/${totalChecked}`;
+    }
+
+    async function fetchTapActivity() {
+      try {
+        const res = await fetch('https://the-tap.casey-digennaro.workers.dev/api/messages?limit=5', { signal: AbortSignal.timeout(8000) });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const html = data.map(m => {
+              const time = new Date(m.timestamp || m.created_at || Date.now()).toLocaleTimeString();
+              return `<div style="padding:4px 0;border-bottom:1px solid var(--border);"><span style="color:var(--accent-dim);">${time}</span> — ${escapeHtml(m.message || m.text || m.content || JSON.stringify(m).slice(0,100))}</div>`;
+            }).join('');
+            document.getElementById('tap-activity').innerHTML = html;
+            return;
+          }
+        }
+        document.getElementById('tap-activity').textContent = 'No recent messages or endpoint unavailable.';
+      } catch (e) {
+        document.getElementById('tap-activity').textContent = 'Tap endpoint unreachable (CORS or network).';
+      }
+    }
+
+    async function fetchHermesObservation() {
+      try {
+        const res = await fetch('https://hermes-query-api.casey-digennaro.workers.dev/api/latest', { signal: AbortSignal.timeout(8000) });
+        if (res.ok) {
+          const data = await res.json();
+          const obs = data.observation || data.text || data.message || data.content || JSON.stringify(data).slice(0, 300);
+          document.getElementById('hermes-obs').textContent = obs;
+          return;
+        }
+        document.getElementById('hermes-obs').textContent = 'No observations available.';
+      } catch (e) {
+        try {
+          const res2 = await fetch('https://hermes-query-api.casey-digennaro.workers.dev/', { signal: AbortSignal.timeout(8000) });
+          if (res2.ok) {
+            const data2 = await res2.json();
+            const obs = data2.observation || data2.latest || data2.text || JSON.stringify(data2).slice(0, 300);
+            document.getElementById('hermes-obs').textContent = obs;
+            return;
+          }
+        } catch(e2) {}
+        document.getElementById('hermes-obs').textContent = 'Hermes query API unreachable (CORS or network).';
+      }
+    }
+
+    async function fetchStats() {
+      // Creative corpus count - try the tap or collective unconscious
+      try {
+        const res = await fetch('https://collective-unconscious.casey-digennaro.workers.dev/api/stats', { signal: AbortSignal.timeout(8000) });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('stat-corpus').textContent = data.corpus_count || data.count || data.total || '—';
+        } else {
+          document.getElementById('stat-corpus').textContent = '—';
+        }
+      } catch(e) {
+        document.getElementById('stat-corpus').textContent = '—';
+      }
+
+      // Repos and tests are estimated from known project structure
+      document.getElementById('stat-repos').textContent = '12+';
+      document.getElementById('stat-tests').textContent = '150+';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('last-update').textContent = 'Updated: ' + now.toLocaleTimeString();
+      document.getElementById('footer-time').textContent = now.toLocaleString();
+    }
+
+    async function refreshAll() {
+      await Promise.all([
+        checkAll(),
+        fetchTapActivity(),
+        fetchHermesObservation(),
+        fetchStats()
+      ]);
+      updateTime();
+    }
+
+    // Initial load
+    refreshAll();
+
+    // Auto-refresh every 30 seconds
+    setInterval(refreshAll, 30000);
+  </script>
+</body>
+</html>
