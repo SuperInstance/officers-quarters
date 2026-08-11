@@ -95,6 +95,7 @@ export const TRACKLINE_RETENTION_MINUTES = 30;
  * but we use the documented F/V EILEEN ratio of 2 per minute for simplicity).
  */
 export function knotsToBoatLengthsPerMinute(knots: number): number {
+  if (!Number.isFinite(knots)) return 0;
   return knots * BOAT_LENGTHS_PER_MIN;
 }
 
@@ -103,8 +104,9 @@ export function knotsToBoatLengthsPerMinute(knots: number): number {
  * "3 boat-lengths away" at standard pace = ~1.5 minutes.
  */
 export function boatLengthsToMinutes(boatLengths: number, pace = STANDARD_PACE): number {
+  if (!Number.isFinite(boatLengths)) return Infinity;
   const blPerMin = knotsToBoatLengthsPerMinute(pace);
-  if (blPerMin <= 0) return Infinity;
+  if (blPerMin <= 0 || !Number.isFinite(blPerMin)) return Infinity;
   return boatLengths / blPerMin;
 }
 
@@ -129,15 +131,23 @@ export function computeSpatialUnit(boatLengths: number, pace = STANDARD_PACE): S
 
 /**
  * Euclidean distance between two positions, in boat-lengths.
+ * NaN/Inf-safe: returns 0 if either position contains invalid coordinates.
  */
 export function distance(a: Position, b: Position): number {
+  if (!Number.isFinite(a.x) || !Number.isFinite(a.y) || !Number.isFinite(b.x) || !Number.isFinite(b.y)) {
+    return 0;
+  }
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
 /**
  * Bearing from one position to another, in degrees.
+ * NaN/Inf-safe: returns 0 if either position contains invalid coordinates.
  */
 export function bearing(from: Position, to: Position): number {
+  if (!Number.isFinite(from.x) || !Number.isFinite(from.y) || !Number.isFinite(to.x) || !Number.isFinite(to.y)) {
+    return 0;
+  }
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   return (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
@@ -206,9 +216,10 @@ export class Trackline {
   totalDistance(): number {
     let dist = 0;
     for (let i = 1; i < this.points.length; i++) {
-      dist += distance(this.points[i - 1].position, this.points[i].position);
+      const d = distance(this.points[i - 1].position, this.points[i].position);
+      dist += Number.isFinite(d) ? d : 0;
     }
-    return dist;
+    return Number.isFinite(dist) ? dist : 0;
   }
 
   /**
@@ -218,7 +229,8 @@ export class Trackline {
     if (this.points.length < 2) return 0;
     const first = this.points[0].timestamp;
     const last = this.points[this.points.length - 1].timestamp;
-    return (last - first) / 60000;
+    const result = (last - first) / 60000;
+    return Number.isFinite(result) ? result : 0;
   }
 
   /**
@@ -242,8 +254,9 @@ export class Trackline {
       dist += distance(recent[i - 1].position, recent[i].position);
     }
     const timeMin = (recent[recent.length - 1].timestamp - recent[0].timestamp) / 60000;
-    if (timeMin <= 0) return STANDARD_PACE;
+    if (timeMin <= 0 || !Number.isFinite(timeMin) || !Number.isFinite(dist)) return STANDARD_PACE;
     const blPerMin = dist / timeMin;
+    if (!Number.isFinite(blPerMin)) return STANDARD_PACE;
     return blPerMin / BOAT_LENGTHS_PER_MIN; // back to knots
   }
 
@@ -280,7 +293,8 @@ export class Trackline {
       startIdx = i;
     }
     const startTime = this.points[startIdx].timestamp;
-    return (cur.timestamp - startTime) / 60000;
+    const soakTime = (cur.timestamp - startTime) / 60000;
+    return Number.isFinite(soakTime) ? soakTime : 0;
   }
 
   /**
@@ -327,9 +341,11 @@ export class Predictor {
    * Compute the predictor point from current position, heading, and pace.
    */
   predict(from: Position, heading: Heading, pace: number): PredictorPoint {
-    const blPerMin = knotsToBoatLengthsPerMinute(pace);
+    const safeHeading = Number.isFinite(heading) ? heading : 0;
+    const safePace = Number.isFinite(pace) ? pace : 0;
+    const blPerMin = knotsToBoatLengthsPerMinute(safePace);
     const totalBL = blPerMin * this.horizonMinutes;
-    const rad = heading * Math.PI / 180;
+    const rad = safeHeading * Math.PI / 180;
     return {
       position: {
         x: from.x + Math.sin(rad) * totalBL,
@@ -344,10 +360,12 @@ export class Predictor {
    * This is 3-4x the predictor distance, same heading.
    */
   extrapolate(from: Position, heading: Heading, pace: number): PredictorPoint {
-    const blPerMin = knotsToBoatLengthsPerMinute(pace);
+    const safeHeading = Number.isFinite(heading) ? heading : 0;
+    const safePace = Number.isFinite(pace) ? pace : 0;
+    const blPerMin = knotsToBoatLengthsPerMinute(safePace);
     const totalMin = this.horizonMinutes * this.extrapolationFactor;
     const totalBL = blPerMin * totalMin;
-    const rad = heading * Math.PI / 180;
+    const rad = safeHeading * Math.PI / 180;
     return {
       position: {
         x: from.x + Math.sin(rad) * totalBL,
@@ -506,10 +524,11 @@ export class RadarPulse {
     const dist = distance(positions[0].pos, positions[positions.length - 1].pos);
     const timeMin = (positions[positions.length - 1].time - positions[0].time) / 60000;
     let pace = STANDARD_PACE;
-    if (timeMin > 0) {
+    if (timeMin > 0 && Number.isFinite(timeMin) && Number.isFinite(dist)) {
       const blPerMin = dist / timeMin;
-      pace = blPerMin / BOAT_LENGTHS_PER_MIN;
+      pace = Number.isFinite(blPerMin) ? blPerMin / BOAT_LENGTHS_PER_MIN : STANDARD_PACE;
     }
+    if (!Number.isFinite(pace)) pace = STANDARD_PACE;
 
     // Confidence scales with number of observations
     const confidence = Math.min(1, positions.length / 3);
@@ -620,9 +639,9 @@ export class Sounder {
   columnFill(): number {
     const active = this.getActiveMarks();
     if (active.length === 0) return 0;
-    const totalDepth = active.reduce((sum, m) => sum + m.depth, 0);
+    const totalDepth = active.reduce((sum, m) => sum + (Number.isFinite(m.depth) ? m.depth : 0), 0);
     const maxDepth = active.length * this.systemCapacityDepth;
-    return maxDepth > 0 ? totalDepth / maxDepth : 0;
+    return maxDepth > 0 && Number.isFinite(maxDepth) ? totalDepth / maxDepth : 0;
   }
 }
 
@@ -714,16 +733,17 @@ export function computeOptimalHeading(
   const goalWeight = 1 - currentWeight;
 
   let blendedHeading = goalBearing * goalWeight + currentBearing * currentWeight;
+  if (!Number.isFinite(blendedHeading)) blendedHeading = goalBearing;
   blendedHeading = ((blendedHeading % 360) + 360) % 360;
 
   // Alignment: how well does the optimal heading match the goal?
   const alignmentDiff = Math.abs(((blendedHeading - goalBearing + 540) % 360) - 180);
-  const alignment = 1 - (alignmentDiff / 180);
+  const alignment = Number.isFinite(alignmentDiff) ? 1 - (alignmentDiff / 180) : 0;
 
   return {
     heading: blendedHeading,
-    alignment,
-    resistance: Math.min(1, resistance),
+    alignment: Number.isFinite(alignment) ? alignment : 0,
+    resistance: Number.isFinite(resistance) ? Math.min(1, resistance) : 0,
   };
 }
 
