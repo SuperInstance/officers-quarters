@@ -88,7 +88,7 @@ src/
 
 Deployed to Cloudflare Pages:
 ```bash
-npx wrangler pages deploy . --project-name=officers-quarters
+npx wrangler pages deploy . --project-name=elephant
 ```
 
 ## Why Games Train Agents for Work

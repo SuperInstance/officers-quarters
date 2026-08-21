@@ -1,6 +1,6 @@
 # 🔧 src/ — Twelve Rooms, No Gods, Only Terminals
 
-> *The officers-quarters is not a game object tree. It is a machine that waits for certainty.*
+> *The elephant is not a game object tree. It is a machine that waits for certainty.*
 
 The source for the Phaser 3 game client. Twelve rooms, each with at least one Intelligent Terminal. The core system stack runs in strict priority order every frame: DeadbandGate → TileActorBus → IntelligentTerminal → TileEvolution → RippleCRDT → NavigatorTerminal.
 
@@ -29,7 +29,7 @@ Every frame, systems run in this exact order:
 
 ## Where to Next
 
-- **Up:** [officers-quarters](../README.md) — root documentation
+- **Up:** [elephant](../README.md) — root documentation
 - ** sideways:** [mud-engine](https://github.com/SuperInstance/mud-engine) — the engine that defines rooms
 - ** sideways:** [scummvm-prototype](https://github.com/SuperInstance/scummvm-prototype) — another projection of the same world
 - ** sideways:** [the-tap](https://github.com/SuperInstance/the-tap) — the bar where officers drink

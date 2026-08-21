@@ -2,7 +2,7 @@
 
 > *No tile will ever acknowledge you. It will only fire.*
 
-Core systems for the officers-quarters. These run in strict priority order every frame — no skipping the queue.
+Core systems for the elephant. These run in strict priority order every frame — no skipping the queue.
 
 ## Systems
 
@@ -31,7 +31,7 @@ This is [learning](https://github.com/SuperInstance/AI-Writings/blob/main/fictio
 ## Where to Next
 
 - **Up:** [src/](../README.md) — source overview
-- **Root:** [officers-quarters](../../README.md) — root documentation
+- **Root:** [elephant](../../README.md) — root documentation
 - ** sideways:** [scenes/](../scenes/) — the rooms where these systems run
 - ** sideways:** [mud-engine/triggers](https://github.com/SuperInstance/mud-engine/blob/main/packages/triggers/) — the trigger engine that inspired tiles
 - ** sideways:** [mud-engine/strategy-guild](https://github.com/SuperInstance/mud-engine/blob/main/packages/strategy-guild/) — recursive adaptation from failure

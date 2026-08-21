@@ -2,7 +2,7 @@
 
 > *Twelve rooms. Each a different frequency you tune yourself to. The Bridge groans with presence. The Flash Station flickers like a struck match. The Poker Room is where bluff and tell blur.*
 
-Phaser 3 scenes for the officers-quarters. Each room is a Phaser scene extending `BaseRoomScene`. Only 3 rooms can be active simultaneously (LRU cache). Only the current room runs update ticks — all others sleep cold.
+Phaser 3 scenes for the elephant. Each room is a Phaser scene extending `BaseRoomScene`. Only 3 rooms can be active simultaneously (LRU cache). Only the current room runs update ticks — all others sleep cold.
 
 ## Scenes
 
@@ -28,7 +28,7 @@ abstract BaseRoom
 ## Where to Next
 
 - **Up:** [src/](../README.md) — source overview
-- **Root:** [officers-quarters](../../README.md) — root documentation
+- **Root:** [elephant](../../README.md) — root documentation
 - ** sideways:** [systems/](../systems/) — the systems that power these scenes
 - ** sideways:** [data/](../data/) — the room definitions these scenes load
 - ** sideways:** [scummvm-prototype](https://github.com/SuperInstance/scummvm-prototype) — another visual projection of rooms
