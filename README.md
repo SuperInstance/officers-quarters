@@ -1,5 +1,7 @@
 ![12-Room Topology](docs/topology.svg)
 
+![The officers' quarters at night — a wardroom of twelve amber-lit doors, brass instruments and a speaking-tube on the bulkhead, warm lamplight on the chart table, deep navy dark](docs/hero-officers-quarters.jpg)
+
 # Officers' Quarters
 
 **A 12-room standalone system with Intelligent Terminals, tile evolution, and reflex-to-cortex learning.**
